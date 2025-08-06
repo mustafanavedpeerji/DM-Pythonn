@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from enum import Enum
 
 class IndustryBase(BaseModel):
     industry_name: str
@@ -21,3 +22,4 @@ class Industry(IndustryBase):
 
     class Config:
         from_attributes = True
+

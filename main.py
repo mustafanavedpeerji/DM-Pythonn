@@ -1,37 +1,49 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
+from database import SessionLocal, engine, Base, get_db
 import models, schemas
 from schemas import IndustryCreate
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from pydantic import BaseModel
 
-models.Base.metadata.create_all(bind=engine)
-app = FastAPI()
+# Import company modules
+from companies import models as company_models
+from companies.routes import router as company_router
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Create all tables (both industries and companies will use the same Base)
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title="Business Management API",
+    description="API for managing industries and companies",
+    version="1.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000", 
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Include company routes WITH PREFIX - THIS WAS THE ISSUE!
+app.include_router(company_router, prefix="/companies", tags=["companies"])
+
+# Keep existing industry routes inline for now
 class IndustryNameUpdate(BaseModel):
     industry_name: str
 
 class IndustryParentUpdate(BaseModel):
     id: int
     new_parent_id: Optional[int] = None
-    new_category: Optional[str] = None  # Added new category field
+    new_category: Optional[str] = None
 
 # Helper function to get category based on hierarchy level
 def get_category_by_level(level: int) -> str:
@@ -44,7 +56,6 @@ def get_category_by_level(level: int) -> str:
     elif level == 3:
         return "sub-sub-sub"
     else:
-        # For deeper levels, continue the pattern
         category = "sub"
         for i in range(1, level):
             category += "-sub"
@@ -61,10 +72,7 @@ def get_industry_level(db: Session, industry_id: int) -> int:
 def update_industry_and_children_categories(db: Session, industry_id: int, new_level: int):
     industry = db.query(models.Industry).filter(models.Industry.id == industry_id).first()
     if industry:
-        # Update current industry category
         industry.category = get_category_by_level(new_level)
-        
-        # Get all children and update their categories recursively
         children = db.query(models.Industry).filter(models.Industry.parent_id == industry_id).all()
         for child in children:
             update_industry_and_children_categories(db, child.id, new_level + 1)
@@ -89,13 +97,12 @@ def is_descendant(db: Session, child_id: int, parent_id: int, visited=None) -> b
     
     return False
 
+# Industry endpoints
 @app.post("/industries/")
 def create_industry(ind: schemas.IndustryCreate, db: Session = Depends(get_db)):
     try:
-        # Create industry data
         industry_data = ind.dict()
         
-        # Auto-assign category based on parent hierarchy level
         if industry_data.get('parent_id'):
             parent_level = get_industry_level(db, industry_data['parent_id'])
             industry_data['category'] = get_category_by_level(parent_level + 1)
@@ -125,7 +132,6 @@ def update_industry_parent(update: IndustryParentUpdate, db: Session = Depends(g
         if not industry:
             raise HTTPException(status_code=404, detail="Industry not found")
 
-        # Validation checks
         if update.new_parent_id is not None:
             parent = db.query(models.Industry).filter(models.Industry.id == update.new_parent_id).first()
             if not parent:
@@ -135,19 +141,14 @@ def update_industry_parent(update: IndustryParentUpdate, db: Session = Depends(g
             if is_descendant(db, update.id, update.new_parent_id):
                 raise HTTPException(status_code=400, detail="Cannot move industry to its own descendant")
 
-        # Update parent_id
         industry.parent_id = update.new_parent_id
         
-        # Calculate new level and update categories
         if update.new_parent_id is None:
-            # Moving to root level
             new_level = 0
         else:
-            # Moving under a parent
             parent_level = get_industry_level(db, update.new_parent_id)
             new_level = parent_level + 1
         
-        # Update the industry and all its children with correct categories
         update_industry_and_children_categories(db, update.id, new_level)
         
         db.commit()
@@ -228,13 +229,11 @@ def get_industry_children(id: int, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching children: {str(e)}")
 
-# New endpoint to get industry hierarchy tree
 @app.get("/industries/tree")
 def get_industry_tree(db: Session = Depends(get_db)):
     try:
         all_industries = db.query(models.Industry).all()
         
-        # Build tree structure
         industry_map = {ind.id: {
             "id": ind.id,
             "industry_name": ind.industry_name,
@@ -255,11 +254,9 @@ def get_industry_tree(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error building tree: {str(e)}")
 
-# New endpoint to fix existing categories (run once to update old data)
 @app.post("/fix-categories")
 def fix_existing_categories(db: Session = Depends(get_db)):
     try:
-        # Get all root industries first
         root_industries = db.query(models.Industry).filter(models.Industry.parent_id == None).all()
         
         for root in root_industries:
@@ -273,8 +270,25 @@ def fix_existing_categories(db: Session = Depends(get_db)):
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "message": "Industry API is running"}
+    return {"status": "healthy", "message": "Business Management API is running"}
+
+# Add a root endpoint for testing
+@app.get("/")
+def read_root():
+    return {"message": "Business Management API is running"}
+
+# Add endpoint to check available routes (for debugging)
+@app.get("/routes")
+def get_routes():
+    routes = []
+    for route in app.routes:
+        if hasattr(route, 'methods') and hasattr(route, 'path'):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods)
+            })
+    return {"routes": routes}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
