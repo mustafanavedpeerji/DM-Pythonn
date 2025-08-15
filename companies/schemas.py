@@ -1,8 +1,9 @@
 # companies/schemas.py
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, field_validator
+from typing import Optional, List, Union
 from enum import Enum
 from datetime import date
+import json
 
 
 class CompanyType(str, Enum):
@@ -33,7 +34,7 @@ class CompanyBase(BaseModel):
     company_group_print_name: str
     company_group_data_type: CompanyType = CompanyType.COMPANY
     parent_id: Optional[int] = None
-    legal_name: Optional[str] = None
+    legal_name: str
     other_names: Optional[str] = None
     
     # Business Operations
@@ -52,19 +53,29 @@ class CompanyBase(BaseModel):
     ownership_type: Optional[str] = None
     global_operations: GlobalOperations = GlobalOperations.LOCAL
     founding_year: Optional[str] = None
-    established_date: Optional[date] = None
-    company_size: int = 3
+    established_day: Optional[str] = None
+    established_month: Optional[str] = None
+    company_size: Optional[int] = None
     ntn_no: Optional[str] = None
+    website: Optional[str] = None
     
     # Industries
-    selected_industries: Optional[List[int]] = None
+    selected_industries: Optional[Union[List[int], str]] = None
     
-    # Ratings (1-5 scale)
-    financial_rating: int = 3
-    operational_rating: int = 3
-    compliance_rating: int = 3
-    market_rating: int = 3
-    innovation_rating: int = 3
+    @field_validator('selected_industries')
+    @classmethod
+    def convert_industries_to_json(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, list):
+            return json.dumps(v)
+        return v
+    
+    # Ratings (1-5 scale) - User will enter, default to None
+    company_brand_image: Optional[int] = None
+    company_business_volume: Optional[int] = None
+    company_financials: Optional[int] = None
+    iisol_relationship: Optional[int] = None
 
 
 class CompanyCreate(CompanyBase):
@@ -94,19 +105,20 @@ class CompanyUpdate(BaseModel):
     ownership_type: Optional[str] = None
     global_operations: Optional[GlobalOperations] = None
     founding_year: Optional[str] = None
-    established_date: Optional[date] = None
+    established_day: Optional[str] = None
+    established_month: Optional[str] = None
     company_size: Optional[int] = None
     ntn_no: Optional[str] = None
+    website: Optional[str] = None
     
     # Industries
-    selected_industries: Optional[List[int]] = None
+    selected_industries: Optional[Union[List[int], str]] = None
     
     # Ratings
-    financial_rating: Optional[int] = None
-    operational_rating: Optional[int] = None
-    compliance_rating: Optional[int] = None
-    market_rating: Optional[int] = None
-    innovation_rating: Optional[int] = None
+    company_brand_image: Optional[int] = None
+    company_business_volume: Optional[int] = None
+    company_financials: Optional[int] = None
+    iisol_relationship: Optional[int] = None
 
 
 class Company(CompanyBase):

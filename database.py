@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # MySQL connection - replace with your actual credentials
-DB_HOST = "localhost"  # Usually localhost in cPanel
+DB_HOST = "magicfingers.com.pk"  # Production host
 DB_USER = "magicfin_industries"
 DB_PASSWORD = "magicfin_industries"
 DB_NAME = "magicfin_industries"

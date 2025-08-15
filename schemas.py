@@ -1,1 +1,0 @@
-# Root schemas file - specific schemas are now in their respective modules

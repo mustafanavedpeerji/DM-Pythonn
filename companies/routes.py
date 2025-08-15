@@ -12,7 +12,7 @@ def create_company(company: schemas.CompanyCreate, db: Session = Depends(get_db)
     """Create a new company"""
     try:
         print(f"🔍 BACKEND: Received company data: {company.dict()}")
-        print(f"🔍 BACKEND: Company ratings: financial={company.financial_rating}, operational={company.operational_rating}")
+        print(f"🔍 BACKEND: Company ratings: brand_image={getattr(company, 'company_brand_image', None)}, business_volume={getattr(company, 'company_business_volume', None)}")
         print(f"🔍 BACKEND: Selected industries: {company.selected_industries}")
         print(f"🔍 BACKEND: Ownership type: {company.ownership_type}")
         
