@@ -11,9 +11,16 @@ router = APIRouter()
 def create_company(company: schemas.CompanyCreate, db: Session = Depends(get_db)):
     """Create a new company"""
     try:
-        return crud.create_company(db=db, company=company)
+        print(f"🔍 BACKEND: Received company data: {company.dict()}")
+        print(f"🔍 BACKEND: Company ratings: financial={company.financial_rating}, operational={company.operational_rating}")
+        print(f"🔍 BACKEND: Selected industries: {company.selected_industries}")
+        print(f"🔍 BACKEND: Ownership type: {company.ownership_type}")
+        
+        result = crud.create_company(db=db, company=company)
+        print(f"🚀 BACKEND: Created company with ID: {result.record_id}")
+        return result
     except Exception as e:
-        print(f"Error creating company: {e}")  # Add logging
+        print(f"❌ BACKEND: Error creating company: {e}")  # Add logging
         raise HTTPException(status_code=400, detail=f"Error creating company: {str(e)}")
 
 @router.get("/", response_model=List[schemas.Company])
