@@ -10,6 +10,14 @@ from companies.routes import router as company_router
 from industries import models as industry_models
 from industries.routes import router as industry_router
 
+# Import group modules
+from groups import models as group_models
+from groups.routes import router as group_router
+
+# Import division modules
+from divisions import models as division_models
+from divisions.routes import router as division_router
+
 # Create all tables (both industries and companies will use the same Base)
 Base.metadata.create_all(bind=engine)
 
@@ -38,6 +46,12 @@ app.include_router(company_router, prefix="/companies", tags=["companies"])
 
 # Include industry routes
 app.include_router(industry_router, prefix="/industries", tags=["industries"])
+
+# Include group routes
+app.include_router(group_router, prefix="/groups", tags=["groups"])
+
+# Include division routes
+app.include_router(division_router, prefix="/divisions", tags=["divisions"])
 
 @app.get("/health")
 def health_check():
