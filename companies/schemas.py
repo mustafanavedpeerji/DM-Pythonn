@@ -51,7 +51,7 @@ class CompanyBase(BaseModel):
     # Additional Company Details
     living_status: LivingStatus = LivingStatus.ACTIVE
     ownership_type: Optional[str] = None
-    global_operations: GlobalOperations = GlobalOperations.LOCAL
+    global_operations: Optional[GlobalOperations] = None
     founding_year: Optional[str] = None
     established_day: Optional[str] = None
     established_month: Optional[str] = None
