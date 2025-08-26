@@ -28,7 +28,7 @@ class Company(Base):
     # Additional Company Details (these should be lowercase in database)
     living_status = Column("living_status", Enum('Active', 'Inactive', 'Dormant', 'In Process'), default='Active')
     ownership_type = Column("ownership_type", String(100), nullable=True)
-    global_operations = Column("global_operations", Enum('Local', 'National', 'Multi National'), default='Local')
+    global_operations = Column("global_operations", Enum('Local', 'National', 'Multi National'), nullable=True, default=None)
     founding_year = Column("founding_year", String(4), nullable=True)
     established_day = Column("established_day", String(2), nullable=True)
     established_month = Column("established_month", String(2), nullable=True)
