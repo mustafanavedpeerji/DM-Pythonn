@@ -34,7 +34,7 @@ class Company(Base):
     established_month = Column("established_month", String(2), nullable=True)
     company_size = Column("company_size", Integer, nullable=True)
     ntn_no = Column("ntn_no", String(50), nullable=True)
-    website = Column("website", String(255), nullable=True)
+    websites = Column("websites", JSON, nullable=True)
     
     # Industries (stored as JSON array of IDs)
     selected_industries = Column("selected_industries", Text, nullable=True)  # Use Text instead of JSON for compatibility

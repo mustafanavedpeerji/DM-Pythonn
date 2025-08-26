@@ -57,7 +57,7 @@ class CompanyBase(BaseModel):
     established_month: Optional[str] = None
     company_size: Optional[int] = None
     ntn_no: Optional[str] = None
-    website: Optional[str] = None
+    websites: Optional[List[str]] = None
     
     # Industries
     selected_industries: Optional[Union[List[int], str]] = None
@@ -109,7 +109,7 @@ class CompanyUpdate(BaseModel):
     established_month: Optional[str] = None
     company_size: Optional[int] = None
     ntn_no: Optional[str] = None
-    website: Optional[str] = None
+    websites: Optional[List[str]] = None
     
     # Industries
     selected_industries: Optional[Union[List[int], str]] = None
