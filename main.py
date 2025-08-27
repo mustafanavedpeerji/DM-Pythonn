@@ -18,6 +18,10 @@ from groups.routes import router as group_router
 from divisions import models as division_models
 from divisions.routes import router as division_router
 
+# Import audit log modules
+from audit_logs import models as audit_log_models
+from audit_logs.routes import router as audit_log_router
+
 # Create all tables (both industries and companies will use the same Base)
 Base.metadata.create_all(bind=engine)
 
@@ -52,6 +56,9 @@ app.include_router(group_router, prefix="/groups", tags=["groups"])
 
 # Include division routes
 app.include_router(division_router, prefix="/divisions", tags=["divisions"])
+
+# Include audit log routes
+app.include_router(audit_log_router)
 
 @app.get("/health")
 def health_check():
