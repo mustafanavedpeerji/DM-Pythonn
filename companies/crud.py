@@ -33,10 +33,10 @@ def create_company(db: Session, company: schemas.CompanyCreate) -> models.Compan
     
     # Convert operations object to comma-separated string
     operations_obj = company_dict.get("operations", {})
-    if operations_obj:
+    if operations_obj and any(operations_obj.values()):  # Only if there are checked operations
         # Get only the True/checked operations
         selected_operations = [key for key, value in operations_obj.items() if value == True]
-        company_dict["business_operations"] = ", ".join(selected_operations) if selected_operations else None
+        company_dict["business_operations"] = ", ".join(selected_operations)
     else:
         company_dict["business_operations"] = None
     
@@ -64,10 +64,10 @@ def update_company(db: Session, record_id: int, company: schemas.CompanyUpdate) 
         # Convert operations object to comma-separated string
         operations_obj = update_data.get("operations")
         if operations_obj is not None:
-            if operations_obj:
+            if operations_obj and any(operations_obj.values()):
                 # Get only the True/checked operations
                 selected_operations = [key for key, value in operations_obj.items() if value == True]
-                update_data["business_operations"] = ", ".join(selected_operations) if selected_operations else None
+                update_data["business_operations"] = ", ".join(selected_operations)
             else:
                 update_data["business_operations"] = None
             # Remove the operations key since it's not in the database model

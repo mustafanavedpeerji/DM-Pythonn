@@ -37,8 +37,9 @@ class CompanyBase(BaseModel):
     legal_name: str
     other_names: Optional[str] = None
     
-    # Business Operations - Frontend sends object, backend converts to comma-separated string
+    # Business Operations - Frontend sends object, backend stores as comma-separated string
     operations: Optional[dict] = None
+    business_operations: Optional[str] = None
     
     # Additional Company Details
     living_status: LivingStatus = LivingStatus.ACTIVE
@@ -83,6 +84,7 @@ class CompanyUpdate(BaseModel):
     
     # Business Operations
     operations: Optional[dict] = None
+    business_operations: Optional[str] = None
     
     # Additional Company Details
     living_status: Optional[LivingStatus] = None
