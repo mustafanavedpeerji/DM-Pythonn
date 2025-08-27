@@ -20,8 +20,8 @@ def create_company(company: schemas.CompanyCreate, db: Session = Depends(get_db)
         result = crud.create_company(db=db, company=company)
         print(f"🚀 BACKEND: Created company with ID: {result.record_id}")
         
-        # Create audit logs for all fields
-        company_dict = company.dict()
+        # Create audit logs only for fields that were actually provided
+        company_dict = company.dict(exclude_unset=True)  # Only include fields that were actually set
         audit_logs = create_audit_logs_for_create(
             db=db,
             table_name="companies",
