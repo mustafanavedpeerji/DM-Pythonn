@@ -218,12 +218,19 @@ def create_audit_logs_for_delete(
     return []
 
 def model_to_dict(model_instance) -> Dict[str, Any]:
-    """Convert SQLAlchemy model instance to dictionary"""
+    """Convert SQLAlchemy model instance to dictionary using Python attribute names"""
     if model_instance is None:
         return {}
     
     result = {}
     for column in model_instance.__table__.columns:
-        value = getattr(model_instance, column.name)
-        result[column.name] = value
+        # Use column.key which should be the Python attribute name
+        attr_name = column.key
+        try:
+            value = getattr(model_instance, attr_name)
+            result[attr_name] = value
+        except AttributeError:
+            # If the attribute doesn't exist, skip it
+            print(f"Warning: Could not access attribute {attr_name} on {model_instance.__class__.__name__}")
+            continue
     return result
