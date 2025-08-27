@@ -10,10 +10,9 @@ def compare_objects(old_obj: Dict[str, Any], new_obj: Dict[str, Any]) -> Dict[st
     """
     changes = {}
     
-    # Get all unique keys from both objects
-    all_keys = set(old_obj.keys()) | set(new_obj.keys())
-    
-    for key in all_keys:
+    # Only check fields that are present in the new_obj (the update data)
+    # This prevents comparing fields that weren't intended to be updated
+    for key in new_obj.keys():
         old_value = old_obj.get(key)
         new_value = new_obj.get(key)
         
@@ -22,9 +21,28 @@ def compare_objects(old_obj: Dict[str, Any], new_obj: Dict[str, Any]) -> Dict[st
         new_str = convert_value_to_string(new_value)
         
         if old_str != new_str:
-            # Only log the change if at least one of the values is meaningful
-            # This prevents logging changes from empty to empty or false to false
-            if should_log_field_value(key, old_value) or should_log_field_value(key, new_value):
+            # Only log the change if it's a meaningful change
+            # Skip changes from null/empty to meaningful values if the old value wasn't meaningful
+            old_is_meaningful = should_log_field_value(key, old_value)
+            new_is_meaningful = should_log_field_value(key, new_value)
+            
+            # Log if:
+            # 1. Both old and new values are meaningful (normal update)
+            # 2. Old was meaningful and new is not (deletion/clearing)
+            # 3. Old was not meaningful but new is meaningful (first time setting)
+            if old_is_meaningful or new_is_meaningful:
+                # But skip if we're going from "not meaningful" to "meaningful" 
+                # AND the old value was null/None/empty (first time setting should be CREATE, not UPDATE)
+                if not old_is_meaningful and new_is_meaningful:
+                    if old_value is None or old_value == '' or old_value == 'None':
+                        continue  # Skip logging this as an update
+                
+                # Skip meaningless enum value changes (like Local -> LOCAL)
+                if key == 'global_operations':
+                    if (old_str and new_str and 
+                        old_str.lower().replace(' ', '') == new_str.lower().replace(' ', '')):
+                        continue  # Same value, different case/format
+                
                 changes[key] = {
                     'old': old_str,
                     'new': new_str
@@ -63,6 +81,10 @@ def convert_value_to_string(value: Any) -> Optional[str]:
         # GlobalOperations enums (if any)  
         if 'GlobalOperations.' in value_str:
             return value_str.replace('GlobalOperations.', '')
+            
+        # Handle cases where value might be just the enum name without prefix
+        if value_str in ['LOCAL', 'NATIONAL', 'MULTI_NATIONAL']:
+            return value_str.replace('LOCAL', 'Local').replace('NATIONAL', 'National').replace('MULTI_NATIONAL', 'Multi National')
         
         return value_str
 
