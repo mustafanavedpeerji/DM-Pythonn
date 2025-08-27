@@ -14,16 +14,8 @@ class Company(Base):
     legal_name = Column("Legal_Name", String(255), nullable=False)
     other_names = Column("Other_Names", Text, nullable=True)
     
-    # Business Operations
-    imports = Column("Imports", Enum('Y', 'N'), default='N')
-    exports = Column("Exports", Enum('Y', 'N'), default='N')
-    manufacture = Column("Manufacture", Enum('Y', 'N'), default='N')
-    distribution = Column("Distribution", Enum('Y', 'N'), default='N')
-    wholesale = Column("Wholesale", Enum('Y', 'N'), default='N')
-    retail = Column("Retail", Enum('Y', 'N'), default='N')
-    services = Column("Services", Enum('Y', 'N'), default='N')
-    online = Column("Online", Enum('Y', 'N'), default='N')
-    soft_products = Column("Soft_Products", Enum('Y', 'N'), default='N')
+    # Business Operations - Store as comma-separated string of selected operations
+    business_operations = Column("business_operations", Text, nullable=True)
     
     # Additional Company Details (these should be lowercase in database)
     living_status = Column("living_status", Enum('Active', 'Inactive', 'Dormant', 'In Process'), default='Active')

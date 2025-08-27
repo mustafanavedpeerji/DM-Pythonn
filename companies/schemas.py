@@ -37,16 +37,8 @@ class CompanyBase(BaseModel):
     legal_name: str
     other_names: Optional[str] = None
     
-    # Business Operations
-    imports: BusinessActivity = BusinessActivity.N
-    exports: BusinessActivity = BusinessActivity.N
-    manufacture: BusinessActivity = BusinessActivity.N
-    distribution: BusinessActivity = BusinessActivity.N
-    wholesale: BusinessActivity = BusinessActivity.N
-    retail: BusinessActivity = BusinessActivity.N
-    services: BusinessActivity = BusinessActivity.N
-    online: BusinessActivity = BusinessActivity.N
-    soft_products: BusinessActivity = BusinessActivity.N
+    # Business Operations - Frontend sends object, backend converts to comma-separated string
+    operations: Optional[dict] = None
     
     # Additional Company Details
     living_status: LivingStatus = LivingStatus.ACTIVE
@@ -90,15 +82,7 @@ class CompanyUpdate(BaseModel):
     other_names: Optional[str] = None
     
     # Business Operations
-    imports: Optional[BusinessActivity] = None
-    exports: Optional[BusinessActivity] = None
-    manufacture: Optional[BusinessActivity] = None
-    distribution: Optional[BusinessActivity] = None
-    wholesale: Optional[BusinessActivity] = None
-    retail: Optional[BusinessActivity] = None
-    services: Optional[BusinessActivity] = None
-    online: Optional[BusinessActivity] = None
-    soft_products: Optional[BusinessActivity] = None
+    operations: Optional[dict] = None
     
     # Additional Company Details
     living_status: Optional[LivingStatus] = None

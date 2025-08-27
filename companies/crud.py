@@ -30,6 +30,18 @@ def create_company(db: Session, company: schemas.CompanyCreate) -> models.Compan
         company_dict["legal_name"] = None
     if company_dict.get("other_names") == "":
         company_dict["other_names"] = None
+    
+    # Convert operations object to comma-separated string
+    operations_obj = company_dict.get("operations", {})
+    if operations_obj:
+        # Get only the True/checked operations
+        selected_operations = [key for key, value in operations_obj.items() if value == True]
+        company_dict["business_operations"] = ", ".join(selected_operations) if selected_operations else None
+    else:
+        company_dict["business_operations"] = None
+    
+    # Remove the operations key since it's not in the database model
+    company_dict.pop("operations", None)
 
     db_company = models.Company(**company_dict)
     db.add(db_company)
@@ -48,6 +60,18 @@ def update_company(db: Session, record_id: int, company: schemas.CompanyUpdate) 
             update_data["legal_name"] = None
         if update_data.get("other_names") == "":
             update_data["other_names"] = None
+        
+        # Convert operations object to comma-separated string
+        operations_obj = update_data.get("operations")
+        if operations_obj is not None:
+            if operations_obj:
+                # Get only the True/checked operations
+                selected_operations = [key for key, value in operations_obj.items() if value == True]
+                update_data["business_operations"] = ", ".join(selected_operations) if selected_operations else None
+            else:
+                update_data["business_operations"] = None
+            # Remove the operations key since it's not in the database model
+            update_data.pop("operations", None)
             
         for field, value in update_data.items():
             setattr(db_company, field, value)
