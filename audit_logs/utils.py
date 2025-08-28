@@ -22,9 +22,8 @@ def compare_objects(old_obj: Dict[str, Any], new_obj: Dict[str, Any]) -> Dict[st
         
         if old_str != new_str:
             # Only log the change if it's a meaningful change
-            # Skip changes from null/empty to meaningful values if the old value wasn't meaningful
-            old_is_meaningful = should_log_field_value(key, old_value)
-            new_is_meaningful = should_log_field_value(key, new_value)
+            old_is_meaningful = should_log_field_value(key, old_value, 'UPDATE')
+            new_is_meaningful = should_log_field_value(key, new_value, 'UPDATE')
             
             # Log if:
             # 1. Both old and new values are meaningful (normal update)
@@ -88,7 +87,7 @@ def convert_value_to_string(value: Any) -> Optional[str]:
         
         return value_str
 
-def should_log_field_value(field_name: str, value: Any) -> bool:
+def should_log_field_value(field_name: str, value: Any, action_type: str = 'CREATE') -> bool:
     """Determine if a field value should be logged"""
     if value is None or value == "":
         return False
@@ -138,9 +137,20 @@ def should_log_field_value(field_name: str, value: Any) -> bool:
     if field_name in rating_fields and (value is None or value == 0 or value == '0'):
         return False
     
-    # Don't skip default enum values - we want to log Active status when set
-    # (Removed the skip logic for Active status)
-        
+    # For CREATE operations, skip default values that user didn't explicitly set
+    if action_type == 'CREATE':
+        # Skip default status (Active) - only log if user changed to something else
+        if field_name == 'living_status' and value_str in ['Active', 'LivingStatus.ACTIVE']:
+            return False
+            
+        # Skip default company type - only log if user changed to Group/Division
+        if field_name == 'company_group_data_type' and value_str in ['Company', 'CompanyType.COMPANY']:
+            return False
+            
+        # Skip "None" string values for optional fields
+        if field_name in ['ownership_type', 'global_operations'] and value_str == 'None':
+            return False
+    
     return True
 
 def create_audit_logs_for_create(
@@ -156,7 +166,7 @@ def create_audit_logs_for_create(
     
     for field_name, value in new_data.items():
         # Only log fields that have meaningful values
-        if should_log_field_value(field_name, value):
+        if should_log_field_value(field_name, value, 'CREATE'):
             audit_log = schemas.AuditLogCreate(
                 table_name=table_name,
                 record_id=str(record_id),
@@ -220,7 +230,7 @@ def create_audit_logs_for_delete(
     
     for field_name, value in deleted_data.items():
         # Only log fields that had meaningful values
-        if should_log_field_value(field_name, value):
+        if should_log_field_value(field_name, value, 'DELETE'):
             audit_log = schemas.AuditLogCreate(
                 table_name=table_name,
                 record_id=str(record_id),
