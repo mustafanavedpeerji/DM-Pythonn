@@ -1,0 +1,140 @@
+# persons/schemas.py
+from pydantic import BaseModel, field_validator
+from typing import Optional
+from enum import Enum
+from datetime import date
+
+# Enums for dropdown options
+class Gender(str, Enum):
+    MALE = "Male"
+    FEMALE = "Female"
+
+class LivingStatus(str, Enum):
+    ACTIVE = "Active"
+    DEAD = "Dead"
+    MISSING = "Missing"
+
+class ProfessionalStatus(str, Enum):
+    PROFESSIONAL = "Professional"
+    RETIRED = "Retired"
+    STUDENT = "Student"
+    DISABLED = "Disabled"
+    MISSING = "Missing"
+    UNEMPLOYED = "Unemployed"
+
+class Religion(str, Enum):
+    ISLAM = "Islam"
+    HINDU = "Hindu"
+    CHRISTIAN = "Christian"
+    PERSIAN = "Persian"
+    SIKH = "Sikh"
+    BUDDHIST = "Buddhist"
+    OTHER = "Other"
+    UNKNOWN = "Unknown"
+
+class Community(str, Enum):
+    DELHI = "Delhi"
+    MEMON = "Memon"
+    BOHRI = "Bohri"
+    PUNJABI = "Punjabi"
+    SINDHI = "Sindhi"
+    BALOCH = "Baloch"
+    PATHAN = "Pathan"
+    UNKNOWN = "Unknown"
+    OTHER = "Other"
+
+class AgeBracket(str, Enum):
+    CHILD = "Child (0-12)"
+    TEEN = "Teen (13-19)"
+    YOUNG_ADULT = "Young Adult (20-30)"
+    ADULT = "Adult (31-50)"
+    MIDDLE_AGE = "Middle Age (51-65)"
+    SENIOR = "Senior (65+)"
+
+# Pakistani cities
+PAKISTANI_CITIES = [
+    "Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Hyderabad", 
+    "Gujranwala", "Peshawar", "Quetta", "Sialkot", "Bahawalpur", "Sargodha", "Sukkur", 
+    "Larkana", "Sheikhupura", "Mirpur Khas", "Rahim Yar Khan", "Gujrat", "Sahiwal", 
+    "Okara", "Wah Cantonment", "Dera Ghazi Khan", "Mardan", "Kasur", "Mingora", 
+    "Nawabshah", "Chiniot", "Kotri", "Khanpur", "Hafizabad", "Sadiqabad", "Jacobabad", 
+    "Shikarpur", "Khanewal", "Jhang", "Attock", "Muzaffargarh", "Mandi Bahauddin"
+]
+
+class PersonBase(BaseModel):
+    person_print_name: str
+    full_name: str
+    gender: Gender
+    living_status: LivingStatus = LivingStatus.ACTIVE
+    professional_status: Optional[ProfessionalStatus] = None
+    religion: Optional[Religion] = None
+    community: Optional[Community] = None
+    base_city: Optional[str] = None
+    birth_city: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    age_bracket: Optional[AgeBracket] = None
+    nic: Optional[str] = None
+    
+    @field_validator('base_city', 'birth_city')
+    @classmethod
+    def validate_cities(cls, v):
+        if v and v not in PAKISTANI_CITIES:
+            # Allow custom cities but log a warning
+            pass
+        return v
+    
+    @field_validator('nic')
+    @classmethod
+    def validate_nic(cls, v):
+        if v:
+            # Remove any spaces or dashes
+            cleaned_nic = v.replace('-', '').replace(' ', '')
+            # Basic validation for Pakistani NIC format
+            if len(cleaned_nic) not in [13, 15]:  # Old format 13 digits, new format 15
+                raise ValueError('NIC must be 13 or 15 digits')
+            if not cleaned_nic.isdigit():
+                raise ValueError('NIC must contain only digits')
+            return cleaned_nic
+        return v
+
+class PersonCreate(PersonBase):
+    pass
+
+class PersonUpdate(BaseModel):
+    person_print_name: Optional[str] = None
+    full_name: Optional[str] = None
+    gender: Optional[Gender] = None
+    living_status: Optional[LivingStatus] = None
+    professional_status: Optional[ProfessionalStatus] = None
+    religion: Optional[Religion] = None
+    community: Optional[Community] = None
+    base_city: Optional[str] = None
+    birth_city: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    age_bracket: Optional[AgeBracket] = None
+    nic: Optional[str] = None
+    
+    @field_validator('base_city', 'birth_city')
+    @classmethod
+    def validate_cities(cls, v):
+        if v and v not in PAKISTANI_CITIES:
+            pass
+        return v
+    
+    @field_validator('nic')
+    @classmethod
+    def validate_nic(cls, v):
+        if v:
+            cleaned_nic = v.replace('-', '').replace(' ', '')
+            if len(cleaned_nic) not in [13, 15]:
+                raise ValueError('NIC must be 13 or 15 digits')
+            if not cleaned_nic.isdigit():
+                raise ValueError('NIC must contain only digits')
+            return cleaned_nic
+        return v
+
+class Person(PersonBase):
+    record_id: int
+
+    class Config:
+        from_attributes = True
