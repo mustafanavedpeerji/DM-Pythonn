@@ -97,7 +97,7 @@ def should_log_field_value(field_name: str, value: Any, action_type: str = 'CREA
     
     # Skip business_operations field if it's empty/None
     if field_name == 'business_operations':
-        if not value or value == 'None' or value == '':
+        if not value or value == 'None' or value == '' or value == 'null':
             return False
     
     # Skip legacy boolean fields (these are now handled by business_operations)
@@ -132,22 +132,21 @@ def should_log_field_value(field_name: str, value: Any, action_type: str = 'CREA
             (isinstance(value, (list, tuple)) and len(value) == 0)):
             return False
     
-    # Skip rating fields that are None or 0 (not rated)
+    # Skip rating fields that are None, 0, or empty (not rated), but allow 1-5
     rating_fields = ['company_brand_image', 'company_business_volume', 'company_financials', 'iisol_relationship']
-    if field_name in rating_fields and (value is None or value == 0 or value == '0'):
-        return False
+    if field_name in rating_fields:
+        # Only log if it's a valid rating (1-5), skip 0, null, None, empty
+        try:
+            rating_value = int(value) if value not in [None, '', 'None', 'null'] else 0
+            if rating_value < 1 or rating_value > 5:
+                return False
+        except (ValueError, TypeError):
+            return False
     
-    # For CREATE operations, skip default values that user didn't explicitly set
+    # For CREATE operations, be more selective about what we skip
     if action_type == 'CREATE':
-        # Skip default status (Active) - only log if user changed to something else
-        if field_name == 'living_status' and value_str in ['Active', 'LivingStatus.ACTIVE']:
-            return False
-            
-        # Skip default company type - only log if user changed to Group/Division
-        if field_name == 'company_group_data_type' and value_str in ['Company', 'CompanyType.COMPANY']:
-            return False
-            
-        # Skip "None" string values for optional fields
+        # Only skip "None" values for optional fields when they're truly default/unset
+        # But allow meaningful selections to be logged
         if field_name in ['ownership_type', 'global_operations'] and value_str == 'None':
             return False
     
@@ -255,9 +254,10 @@ def model_to_dict(model_instance) -> Dict[str, Any]:
         return {}
     
     result = {}
-    for column in model_instance.__table__.columns:
-        # Use column.key which should be the Python attribute name
-        attr_name = column.key
+    # Get all mapped attributes from the SQLAlchemy model
+    mapper = model_instance.__class__.__mapper__
+    for column_property in mapper.attrs:
+        attr_name = column_property.key
         try:
             value = getattr(model_instance, attr_name)
             result[attr_name] = value

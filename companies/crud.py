@@ -6,7 +6,32 @@ from . import models, schemas
 
 def get_company(db: Session, record_id: int) -> Optional[models.Company]:
     """Get a single company by ID"""
-    return db.query(models.Company).filter(models.Company.record_id == record_id).first()
+    company = db.query(models.Company).filter(models.Company.record_id == record_id).first()
+    if company:
+        # Convert business_operations back to operations object for frontend compatibility
+        if hasattr(company, 'business_operations') and company.business_operations:
+            operations_list = [op.strip() for op in company.business_operations.split(',')]
+            # Create operations object
+            operations = {
+                'imports': 'imports' in operations_list,
+                'exports': 'exports' in operations_list,
+                'manufacture': 'manufacture' in operations_list,
+                'distribution': 'distribution' in operations_list,
+                'wholesale': 'wholesale' in operations_list,
+                'retail': 'retail' in operations_list,
+                'services': 'services' in operations_list,
+                'online': 'online' in operations_list,
+                'soft_products': 'soft_products' in operations_list,
+            }
+            # Add operations as a dynamic attribute for the response
+            company.operations = operations
+        else:
+            company.operations = {
+                'imports': False, 'exports': False, 'manufacture': False,
+                'distribution': False, 'wholesale': False, 'retail': False,
+                'services': False, 'online': False, 'soft_products': False,
+            }
+    return company
 
 def get_companies(db: Session, skip: int = 0, limit: int = 100) -> List[models.Company]:
     """Get companies with pagination"""
@@ -33,10 +58,19 @@ def create_company(db: Session, company: schemas.CompanyCreate) -> models.Compan
     
     # Convert operations object to comma-separated string
     operations_obj = company_dict.get("operations", {})
-    if operations_obj and any(operations_obj.values()):  # Only if there are checked operations
+    
+    if operations_obj and isinstance(operations_obj, dict):
         # Get only the True/checked operations
-        selected_operations = [key for key, value in operations_obj.items() if value == True]
-        company_dict["business_operations"] = ", ".join(selected_operations)
+        selected_operations = []
+        for key, value in operations_obj.items():
+            if value is True or value == True or value == 'true' or value == 'Y':
+                selected_operations.append(key)
+        
+        if selected_operations:
+            business_ops_value = ", ".join(selected_operations)
+            company_dict["business_operations"] = business_ops_value
+        else:
+            company_dict["business_operations"] = None
     else:
         company_dict["business_operations"] = None
     

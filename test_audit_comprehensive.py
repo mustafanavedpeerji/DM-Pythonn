@@ -35,7 +35,7 @@ def print_audit_logs(db: Session, company_id: int):
 def test_scenario_1_create():
     """Test 1: CREATE - Only logs fields user actually filled"""
     print("\n" + "="*60)
-    print("🧪 TEST 1: CREATE - Selective Field Logging")
+    print("TEST 1: CREATE - Selective Field Logging")
     print("="*60)
     
     db = SessionLocal()
@@ -71,29 +71,29 @@ def test_scenario_1_create():
             # - ratings (all null)
         )
         
-        print(f"📤 Creating company with selective fields...")
+        print(f"Creating company with selective fields...")
         result = crud.create_company(db, test_company)
-        print(f"✅ Created Company ID: {result.record_id}")
+        print(f"Created Company ID: {result.record_id}")
         
         # Check what was actually stored
-        print(f"💾 Stored business_operations: '{result.business_operations}'")
+        print(f"Stored business_operations: '{result.business_operations}'")
         
         # Check audit logs
         print_audit_logs(db, result.record_id)
         
-        print("\n✅ Expected logs:")
-        print("  ➕ company_group_print_name, legal_name, other_names")
-        print("  ➕ living_status, business_operations, selected_industries, founding_year")
-        print("❌ Should NOT log:")
-        print("  ❌ parent_id, ownership_type, global_operations (null/empty)")
-        print("  ❌ established_day, established_month, company_size (null)")
-        print("  ❌ ntn_no, websites (empty)")
-        print("  ❌ rating fields (null/0)")
+        print("\nExpected logs:")
+        print("  + company_group_print_name, legal_name, other_names")
+        print("  + living_status, business_operations, selected_industries, founding_year")
+        print("Should NOT log:")
+        print("  - parent_id, ownership_type, global_operations (null/empty)")
+        print("  - established_day, established_month, company_size (null)")
+        print("  - ntn_no, websites (empty)")
+        print("  - rating fields (null/0)")
         
         return result.record_id
         
     except Exception as e:
-        print(f"❌ Error in CREATE test: {e}")
+        print(f"Error in CREATE test: {e}")
         return None
     finally:
         db.close()
@@ -101,7 +101,7 @@ def test_scenario_1_create():
 def test_scenario_2_update(company_id: int):
     """Test 2: UPDATE - Only logs fields that were actually changed"""
     print("\n" + "="*60)
-    print("🧪 TEST 2: UPDATE - Only Changed Fields")
+    print("TEST 2: UPDATE - Only Changed Fields")
     print("="*60)
     
     db = SessionLocal()
@@ -112,8 +112,8 @@ def test_scenario_2_update(company_id: int):
             print(f"❌ Company {company_id} not found")
             return
             
-        print(f"📥 Current company name: '{existing.company_group_print_name}'")
-        print(f"📥 Current status: '{existing.living_status}'")
+        print(f"Current company name: '{existing.company_group_print_name}'")
+        print(f"Current status: '{existing.living_status}'")
         
         # Update with ONLY 2 fields changed (like real user edit)
         update_data = schemas.CompanyUpdate(
@@ -145,7 +145,7 @@ def test_scenario_2_update(company_id: int):
 def test_scenario_3_deletion(company_id: int):
     """Test 3: DELETE fields (backspace to empty)"""
     print("\n" + "="*60)
-    print("🧪 TEST 3: DELETE - Backspaced Fields")
+    print("TEST 3: DELETE - Backspaced Fields")
     print("="*60)
     
     db = SessionLocal()
@@ -185,7 +185,7 @@ def test_scenario_3_deletion(company_id: int):
 def test_cleanup(company_id: int):
     """Clean up test data"""
     print("\n" + "="*60)
-    print("🧹 CLEANUP")
+    print("CLEANUP")
     print("="*60)
     
     db = SessionLocal()
@@ -203,7 +203,7 @@ def test_cleanup(company_id: int):
 
 def main():
     """Run comprehensive audit logging tests"""
-    print("🧪 COMPREHENSIVE AUDIT LOGGING TESTS")
+    print("COMPREHENSIVE AUDIT LOGGING TESTS")
     print("="*60)
     print("Testing all 3 scenarios:")
     print("1. CREATE: Only user-filled fields get logged")  
@@ -226,7 +226,7 @@ def main():
     test_cleanup(company_id)
     
     print("\n" + "="*60)
-    print("✅ ALL TESTS COMPLETED")
+    print("ALL TESTS COMPLETED")
     print("="*60)
     print("Check the output above to verify audit logging is working correctly!")
 

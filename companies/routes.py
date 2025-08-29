@@ -12,16 +12,16 @@ router = APIRouter()
 def create_company(company: schemas.CompanyCreate, db: Session = Depends(get_db)):
     """Create a new company"""
     try:
-        print(f"🔍 BACKEND: Received company data: {company.dict()}")
-        print(f"🔍 BACKEND: Company ratings: brand_image={getattr(company, 'company_brand_image', None)}, business_volume={getattr(company, 'company_business_volume', None)}")
-        print(f"🔍 BACKEND: Selected industries: {company.selected_industries}")
-        print(f"🔍 BACKEND: Ownership type: {company.ownership_type}")
+        print(f"BACKEND: Received company data: {company.model_dump()}")
+        print(f"BACKEND: Company ratings: brand_image={getattr(company, 'company_brand_image', None)}, business_volume={getattr(company, 'company_business_volume', None)}")
+        print(f"BACKEND: Selected industries: {company.selected_industries}")
+        print(f"BACKEND: Ownership type: {company.ownership_type}")
         
         result = crud.create_company(db=db, company=company)
-        print(f"🚀 BACKEND: Created company with ID: {result.record_id}")
+        print(f"BACKEND: Created company with ID: {result.record_id}")
         
         # Create audit logs only for fields that were actually provided
-        company_dict = company.dict(exclude_unset=True)  # Only include fields that were actually set
+        company_dict = company.model_dump(exclude_unset=True)  # Only include fields that were actually set
         audit_logs = create_audit_logs_for_create(
             db=db,
             table_name="companies",
@@ -30,11 +30,11 @@ def create_company(company: schemas.CompanyCreate, db: Session = Depends(get_db)
             user_id="system",  # TODO: Replace with actual user ID from authentication
             user_name="System User"  # TODO: Replace with actual user name from authentication
         )
-        print(f"📝 AUDIT: Created {len(audit_logs)} audit log entries for company creation")
+        print(f"AUDIT: Created {len(audit_logs)} audit log entries for company creation")
         
         return result
     except Exception as e:
-        print(f"❌ BACKEND: Error creating company: {e}")  # Add logging
+        print(f"BACKEND: Error creating company: {e}")  # Add logging
         raise HTTPException(status_code=400, detail=f"Error creating company: {str(e)}")
 
 @router.get("/", response_model=List[schemas.Company])
@@ -111,7 +111,20 @@ def update_company(company_id: int, company: schemas.CompanyUpdate, db: Session 
             raise HTTPException(status_code=404, detail="Company not found")
         
         # Create audit logs for changed fields
-        new_data = company.dict(exclude_unset=True)  # Only include fields that were actually set
+        new_data = company.model_dump(exclude_unset=True)  # Only include fields that were actually set
+        
+        # Process new_data the same way as the CRUD update function for accurate comparison
+        if "operations" in new_data:
+            operations_obj = new_data["operations"]
+            if operations_obj and any(operations_obj.values()):
+                # Get only the True/checked operations
+                selected_operations = [key for key, value in operations_obj.items() if value == True]
+                new_data["business_operations"] = ", ".join(selected_operations)
+            else:
+                new_data["business_operations"] = None
+            # Remove the operations key since it's not in the database model
+            new_data.pop("operations", None)
+        
         audit_logs = create_audit_logs_for_update(
             db=db,
             table_name="companies",
@@ -121,7 +134,7 @@ def update_company(company_id: int, company: schemas.CompanyUpdate, db: Session 
             user_id="system",  # TODO: Replace with actual user ID from authentication
             user_name="System User"  # TODO: Replace with actual user name from authentication
         )
-        print(f"📝 AUDIT: Created {len(audit_logs)} audit log entries for company update")
+        print(f"AUDIT: Created {len(audit_logs)} audit log entries for company update")
         
         return db_company
     except Exception as e:
@@ -151,7 +164,7 @@ def delete_company(company_id: int, db: Session = Depends(get_db)):
         user_id="system",  # TODO: Replace with actual user ID from authentication
         user_name="System User"  # TODO: Replace with actual user name from authentication
     )
-    print(f"📝 AUDIT: Created {len(audit_logs)} audit log entries for company deletion")
+    print(f"AUDIT: Created {len(audit_logs)} audit log entries for company deletion")
     
     return {"message": "Company and its children deleted successfully"}
 
