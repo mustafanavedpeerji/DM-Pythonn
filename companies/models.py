@@ -1,13 +1,22 @@
 # companies/models.py - PRODUCTION VERSION with correct column names
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, Date, JSON
 from sqlalchemy.orm import relationship
+import random
+import string
 from database import Base  # Import Base from database.py
+
+def generate_short_uid():
+    """Generate a short UID in format: CM-XX (e.g., 'CM-01', 'CM-99')"""
+    # Generate random 2-digit number
+    number = random.randint(1, 99)
+    return f"CM-{number:02d}"
 
 class Company(Base):
     __tablename__ = "companies"
 
     # Map Python attributes to actual database column names (PascalCase)
     record_id = Column("Record_ID", Integer, primary_key=True, index=True, autoincrement=True)
+    uid = Column("UID", String(5), unique=True, nullable=False, default=lambda: generate_short_uid())
     company_group_print_name = Column("Company_Group_Print_Name", String(255), nullable=False)
     company_group_data_type = Column("Company_Group_Data_Type", Enum('Company', 'Group', 'Division'), nullable=False)
     parent_id = Column("Parent_ID", Integer, ForeignKey('companies.Record_ID', ondelete='CASCADE'), nullable=True)

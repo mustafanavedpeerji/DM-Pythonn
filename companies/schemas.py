@@ -109,6 +109,7 @@ class CompanyUpdate(BaseModel):
 
 class Company(CompanyBase):
     record_id: int
+    uid: str
 
     class Config:
         from_attributes = True
