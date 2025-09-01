@@ -38,8 +38,7 @@ class Person(Base):
     # Age Information
     date_of_birth = Column("date_of_birth", Date, nullable=True)
     age_bracket = Column("age_bracket", Enum(
-        'Child (0-12)', 'Teen (13-19)', 'Young Adult (20-30)', 
-        'Adult (31-50)', 'Middle Age (51-65)', 'Senior (65+)'
+        '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90'
     ), nullable=True)
     
     # Identification

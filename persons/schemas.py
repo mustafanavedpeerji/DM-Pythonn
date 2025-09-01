@@ -44,12 +44,13 @@ class Community(str, Enum):
     OTHER = "Other"
 
 class AgeBracket(str, Enum):
-    CHILD = "Child (0-12)"
-    TEEN = "Teen (13-19)"
-    YOUNG_ADULT = "Young Adult (20-30)"
-    ADULT = "Adult (31-50)"
-    MIDDLE_AGE = "Middle Age (51-65)"
-    SENIOR = "Senior (65+)"
+    TWENTY_THIRTY = "20-30"
+    THIRTY_FORTY = "30-40"
+    FORTY_FIFTY = "40-50"
+    FIFTY_SIXTY = "50-60"
+    SIXTY_SEVENTY = "60-70"
+    SEVENTY_EIGHTY = "70-80"
+    EIGHTY_NINETY = "80-90"
 
 class Department(str, Enum):
     BOARD_MEMBER = "Board Member"
