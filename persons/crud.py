@@ -13,18 +13,24 @@ def calculate_age_bracket(birth_date: date) -> str:
     today = date.today()
     age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
     
-    if age <= 12:
-        return "Child (0-12)"
-    elif age <= 19:
-        return "Teen (13-19)"
+    if age < 20:
+        return None
     elif age <= 30:
-        return "Young Adult (20-30)"
+        return "20-30"
+    elif age <= 40:
+        return "30-40"
     elif age <= 50:
-        return "Adult (31-50)"
-    elif age <= 65:
-        return "Middle Age (51-65)"
+        return "40-50"
+    elif age <= 60:
+        return "50-60"
+    elif age <= 70:
+        return "60-70"
+    elif age <= 80:
+        return "70-80"
+    elif age <= 90:
+        return "80-90"
     else:
-        return "Senior (65+)"
+        return None
 
 def get_person(db: Session, record_id: int) -> Optional[models.Person]:
     """Get a single person by ID"""
@@ -47,9 +53,13 @@ def create_person(db: Session, person: schemas.PersonCreate) -> models.Person:
         person_dict["age_bracket"] = calculate_age_bracket(person_dict["date_of_birth"])
     
     # Handle empty strings for optional fields
-    for field in ["professional_status", "religion", "community", "base_city", "birth_city", "nic"]:
+    for field in ["professional_status", "religion", "community", "base_city", "department", "designation", "nic"]:
         if person_dict.get(field) == "":
             person_dict[field] = None
+    
+    # Handle empty string for age_bracket specifically
+    if person_dict.get("age_bracket") == "":
+        person_dict["age_bracket"] = None
     
     db_person = models.Person(**person_dict)
     db.add(db_person)
@@ -68,9 +78,13 @@ def update_person(db: Session, record_id: int, person: schemas.PersonUpdate) -> 
             update_data["age_bracket"] = calculate_age_bracket(update_data["date_of_birth"])
         
         # Handle empty strings for optional fields
-        for field in ["professional_status", "religion", "community", "base_city", "birth_city", "nic"]:
+        for field in ["professional_status", "religion", "community", "base_city", "department", "designation", "nic"]:
             if update_data.get(field) == "":
                 update_data[field] = None
+        
+        # Handle empty string for age_bracket specifically
+        if update_data.get("age_bracket") == "":
+            update_data["age_bracket"] = None
                 
         for field, value in update_data.items():
             setattr(db_person, field, value)

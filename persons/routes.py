@@ -35,6 +35,9 @@ def create_person(person: schemas.PersonCreate, db: Session = Depends(get_db)):
         )
         print(f"AUDIT: Created {len(audit_logs)} audit log entries for person creation")
         
+        # Temporarily fix age_bracket response issue
+        if hasattr(result, 'age_bracket') and result.age_bracket == "":
+            result.age_bracket = None
         return result
     except Exception as e:
         print(f"BACKEND: Error creating person: {e}")
@@ -44,12 +47,20 @@ def create_person(person: schemas.PersonCreate, db: Session = Depends(get_db)):
 def read_persons(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get persons with pagination"""
     persons = crud.get_persons(db, skip=skip, limit=limit)
+    # Fix age_bracket validation issues
+    for person in persons:
+        if hasattr(person, 'age_bracket') and person.age_bracket == "":
+            person.age_bracket = None
     return persons
 
 @router.get("/all", response_model=List[schemas.Person])
 def read_all_persons(db: Session = Depends(get_db)):
     """Get all persons"""
     persons = crud.get_all_persons(db)
+    # Fix age_bracket validation issues
+    for person in persons:
+        if hasattr(person, 'age_bracket') and person.age_bracket == "":
+            person.age_bracket = None
     return persons
 
 @router.get("/search", response_model=List[schemas.Person])
@@ -125,6 +136,9 @@ def update_person(person_id: int, person: schemas.PersonUpdate, db: Session = De
         )
         print(f"AUDIT: Created {len(audit_logs)} audit log entries for person update")
         
+        # Temporarily fix age_bracket response issue
+        if hasattr(db_person, 'age_bracket') and db_person.age_bracket == "":
+            db_person.age_bracket = None
         return db_person
     except Exception as e:
         print(f"Error updating person: {e}")
