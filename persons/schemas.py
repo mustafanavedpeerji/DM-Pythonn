@@ -1,6 +1,6 @@
 # persons/schemas.py
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from datetime import date
 
@@ -51,6 +51,37 @@ class AgeBracket(str, Enum):
     MIDDLE_AGE = "Middle Age (51-65)"
     SENIOR = "Senior (65+)"
 
+class Department(str, Enum):
+    BOARD_MEMBER = "Board Member"
+    MANAGEMENT_ALL = "Management All"
+    MANAGEMENT_OPERATIONS = "Management Operations"
+    MANAGEMENT_ADMINISTRATION = "Management Administration"
+    ENGINEERING_DEPARTMENT = "Engineering Department"
+    RESEARCH_DEVELOPMENT = "Research & Development"
+    REGULATORY_LEGAL = "Regulatory & Legal"
+    QUALITY_CONTROL = "Quality Control"
+    HUMAN_RESOURCE = "Human Resource"
+    TRAINING_DEVELOPMENT = "Training & Development"
+    PURCHASE_PROCUREMENT = "Purchase & Procurement"
+    LOGISTICS_DISTRIBUTION = "Logistics & Distribution"
+    FINANCE_ACCOUNTS = "Finance & Accounts"
+    AUDIT_DEPARTMENT = "Audit Department"
+    INFORMATION_TECHNOLOGY = "Information Technology"
+    CREATIVE_DEPARTMENT = "Creative Department"
+    CUSTOMER_SUPPORT = "Customer Support"
+    SALES_SUPPORT = "Sales & Support"
+    MARKETING_SALES = "Marketing & Sales"
+    MARKETING_PLANNING = "Marketing & Planning"
+    MARKETING_DIGITAL = "Marketing & Digital"
+    ECOMMERCE_DEPARTMENT = "eCommerce Department"
+    PR_DEPARTMENT = "PR Department"
+    EDITORIAL_DEPARTMENT = "Editorial Department"
+    IMPORT_EXPORT = "Import Export"
+    PROTOCOL_SECURITY = "Protocol & Security"
+    EXAMINATION_DEPARTMENT = "Examination Department"
+    ACADEMICS_DEPARTMENT = "Academics Department"
+    ADMISSIONS_DEPARTMENT = "Admissions Department"
+
 # Pakistani cities
 PAKISTANI_CITIES = [
     "Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Hyderabad", 
@@ -70,12 +101,14 @@ class PersonBase(BaseModel):
     religion: Optional[Religion] = None
     community: Optional[Community] = None
     base_city: Optional[str] = None
-    birth_city: Optional[str] = None
+    attached_companies: Optional[List[int]] = None
+    department: Optional[Department] = None
+    designation: Optional[str] = None
     date_of_birth: Optional[date] = None
     age_bracket: Optional[AgeBracket] = None
     nic: Optional[str] = None
     
-    @field_validator('base_city', 'birth_city')
+    @field_validator('base_city')
     @classmethod
     def validate_cities(cls, v):
         if v and v not in PAKISTANI_CITIES:
@@ -109,12 +142,14 @@ class PersonUpdate(BaseModel):
     religion: Optional[Religion] = None
     community: Optional[Community] = None
     base_city: Optional[str] = None
-    birth_city: Optional[str] = None
+    attached_companies: Optional[List[int]] = None
+    department: Optional[Department] = None
+    designation: Optional[str] = None
     date_of_birth: Optional[date] = None
     age_bracket: Optional[AgeBracket] = None
     nic: Optional[str] = None
     
-    @field_validator('base_city', 'birth_city')
+    @field_validator('base_city')
     @classmethod
     def validate_cities(cls, v):
         if v and v not in PAKISTANI_CITIES:

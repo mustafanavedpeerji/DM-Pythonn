@@ -1,5 +1,5 @@
 # persons/models.py
-from sqlalchemy import Column, Integer, String, Date, Enum, Text
+from sqlalchemy import Column, Integer, String, Date, Enum, Text, JSON
 from database import Base
 
 class Person(Base):
@@ -29,7 +29,11 @@ class Person(Base):
     
     # Location Information
     base_city = Column("base_city", String(100), nullable=True)
-    birth_city = Column("birth_city", String(100), nullable=True)
+    
+    # Company and Professional Information
+    attached_companies = Column("attached_companies", JSON, nullable=True)  # List of company IDs
+    department = Column("department", String(100), nullable=True)
+    designation = Column("designation", String(100), nullable=True)
     
     # Age Information
     date_of_birth = Column("date_of_birth", Date, nullable=True)
