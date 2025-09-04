@@ -46,12 +46,41 @@ def create_person(person: schemas.PersonCreate, db: Session = Depends(get_db)):
 @router.get("/", response_model=List[schemas.Person])
 def read_persons(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get persons with pagination"""
-    persons = crud.get_persons(db, skip=skip, limit=limit)
-    # Fix age_bracket validation issues
-    for person in persons:
-        if hasattr(person, 'age_bracket') and person.age_bracket == "":
-            person.age_bracket = None
-    return persons
+    try:
+        persons = crud.get_persons(db, skip=skip, limit=limit)
+        # Fix age_bracket validation issues
+        for person in persons:
+            if hasattr(person, 'age_bracket') and person.age_bracket == "":
+                person.age_bracket = None
+        return persons
+    except Exception as e:
+        print(f"BACKEND: Error getting persons: {e}")
+        # If enum validation fails, try to get data without age_bracket filter
+        try:
+            from sqlalchemy import text
+            result = db.execute(text("""
+                SELECT person_id, person_print_name, full_name, gender, living_status,
+                       professional_status, religion, community, base_city, attached_companies,
+                       department, designation, date_of_birth, 
+                       CASE 
+                         WHEN age_bracket IN ('20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90') 
+                         THEN age_bracket 
+                         ELSE NULL 
+                       END as age_bracket, 
+                       nic, record_id, created_at, updated_at
+                FROM persons 
+                ORDER BY person_id 
+                LIMIT :limit OFFSET :skip
+            """), {"limit": limit, "skip": skip})
+            
+            persons = []
+            for row in result:
+                person_dict = dict(row._mapping)
+                persons.append(schemas.Person(**person_dict))
+            return persons
+        except Exception as e2:
+            print(f"BACKEND: Fallback query also failed: {e2}")
+            raise HTTPException(status_code=500, detail="Error retrieving persons")
 
 @router.get("/all", response_model=List[schemas.Person])
 def read_all_persons(db: Session = Depends(get_db)):
@@ -92,10 +121,21 @@ def get_available_cities():
 @router.get("/{person_id}", response_model=schemas.Person)
 def read_person(person_id: int, db: Session = Depends(get_db)):
     """Get a specific person by ID"""
-    db_person = crud.get_person(db, record_id=person_id)
-    if db_person is None:
-        raise HTTPException(status_code=404, detail="Person not found")
-    return db_person
+    try:
+        db_person = crud.get_person(db, record_id=person_id)
+        if db_person is None:
+            raise HTTPException(status_code=404, detail="Person not found")
+        
+        # Fix age_bracket validation issues
+        if hasattr(db_person, 'age_bracket') and db_person.age_bracket == "":
+            db_person.age_bracket = None
+            
+        return db_person
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"BACKEND: Error getting person {person_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving person: {str(e)}")
 
 @router.put("/{person_id}", response_model=schemas.Person)
 def update_person(person_id: int, person: schemas.PersonUpdate, db: Session = Depends(get_db)):
