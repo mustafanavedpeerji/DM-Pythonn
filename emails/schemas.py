@@ -117,7 +117,21 @@ class EmailAssociationBase(BaseModel):
             raise ValueError('ID must be positive integer')
         return v
 
-class EmailAssociationCreate(EmailAssociationBase):
+class EmailAssociationCreate(BaseModel):
+    email_id: Optional[int] = None  # Will be set during creation process
+    company_id: Optional[int] = None
+    department: Optional[Department] = None
+    person_id: Optional[int] = None
+    association_type: Optional[AssociationType] = None
+    notes: Optional[str] = None
+
+    @field_validator('company_id', 'person_id')
+    @classmethod
+    def validate_ids(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError('ID must be positive integer')
+        return v
+
     # At least one association must be provided
     def __init__(self, **data):
         super().__init__(**data)

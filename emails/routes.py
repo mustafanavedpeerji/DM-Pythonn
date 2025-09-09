@@ -22,12 +22,23 @@ def create_email_with_associations(request: schemas.EmailCreateRequest, db: Sess
             raise HTTPException(status_code=400, detail=f"Email {request.email.email_address} already exists")
         
         # Create email and associations
-        if request.associations:
-            db_email, db_associations = crud.create_email_with_associations(
-                db=db, 
-                email_data=request.email, 
-                associations_data=request.associations
-            )
+        if request.associations and len(request.associations) > 0:
+            # Filter out associations without company_id or person_id
+            valid_associations = [
+                assoc for assoc in request.associations 
+                if assoc.company_id is not None or assoc.person_id is not None
+            ]
+            
+            if valid_associations:
+                db_email, db_associations = crud.create_email_with_associations(
+                    db=db, 
+                    email_data=request.email, 
+                    associations_data=valid_associations
+                )
+            else:
+                # Create just the email if no valid associations
+                db_email = crud.create_email(db=db, email=request.email)
+                db_associations = []
         else:
             # Create just the email
             db_email = crud.create_email(db=db, email=request.email)
