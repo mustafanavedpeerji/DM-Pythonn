@@ -95,10 +95,24 @@ def read_all_persons(db: Session = Depends(get_db)):
 @router.get("/search", response_model=List[schemas.Person])
 def search_persons(q: str = Query(..., description="Search term"), db: Session = Depends(get_db)):
     """Search persons by name or NIC"""
+    # If empty search, return all persons (limited)
+    if len(q.strip()) == 0:
+        persons = crud.get_persons(db, skip=0, limit=50)  # Return first 50 persons
+        # Fix age_bracket validation issues
+        for person in persons:
+            if hasattr(person, 'age_bracket') and person.age_bracket == "":
+                person.age_bracket = None
+        return persons
+    
+    # For search terms less than 2 characters, require at least 2
     if len(q.strip()) < 2:
         raise HTTPException(status_code=400, detail="Search term must be at least 2 characters")
     
     persons = crud.search_persons(db, q)
+    # Fix age_bracket validation issues
+    for person in persons:
+        if hasattr(person, 'age_bracket') and person.age_bracket == "":
+            person.age_bracket = None
     return persons
 
 @router.get("/by-city/{city}", response_model=List[schemas.Person])
