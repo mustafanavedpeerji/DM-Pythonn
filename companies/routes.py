@@ -70,8 +70,8 @@ def get_company_tree(db: Session = Depends(get_db)):
 @router.get("/search", response_model=List[schemas.Company])
 def search_companies(q: str = Query("", description="Search term"), db: Session = Depends(get_db)):
     """Search companies by name"""
-    if len(q.strip()) < 2:
-        return []
+    if len(q.strip()) < 1:
+        return crud.get_all_companies(db)
 
     companies = crud.search_companies(db, q)
     return companies
