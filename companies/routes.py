@@ -68,10 +68,10 @@ def get_company_tree(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error getting company tree: {str(e)}")
 
 @router.get("/search", response_model=List[schemas.Company])
-def search_companies(q: str = Query(..., description="Search term"), db: Session = Depends(get_db)):
+def search_companies(q: str = Query("", description="Search term"), db: Session = Depends(get_db)):
     """Search companies by name"""
     if len(q.strip()) < 2:
-        raise HTTPException(status_code=400, detail="Search term must be at least 2 characters")
+        return []
 
     companies = crud.search_companies(db, q)
     return companies
