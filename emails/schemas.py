@@ -14,13 +14,6 @@ class EmailType(str, Enum):
     ADMIN = "admin"
     OTHER = "other"
 
-class AssociationType(str, Enum):
-    PRIMARY = "primary"
-    SECONDARY = "secondary"
-    SUPPORT = "support"
-    BILLING = "billing"
-    TECHNICAL = "technical"
-    OTHER = "other"
 
 class EmailStatus(str, Enum):
     ACTIVE = "Active"
@@ -105,10 +98,8 @@ class EmailDirectory(EmailDirectoryBase):
 class EmailAssociationBase(BaseModel):
     email_id: int
     company_id: Optional[int] = None
-    department: Optional[Department] = None
+    departments: Optional[List[Department]] = None
     person_id: Optional[int] = None
-    association_type: Optional[AssociationType] = None
-    notes: Optional[str] = None
 
     @field_validator('company_id', 'person_id')
     @classmethod
@@ -120,10 +111,8 @@ class EmailAssociationBase(BaseModel):
 class EmailAssociationCreate(BaseModel):
     email_id: Optional[int] = None  # Will be set during creation process
     company_id: Optional[int] = None
-    department: Optional[Department] = None
+    departments: Optional[List[Department]] = None
     person_id: Optional[int] = None
-    association_type: Optional[AssociationType] = None
-    notes: Optional[str] = None
 
     @field_validator('company_id', 'person_id')
     @classmethod
@@ -140,10 +129,8 @@ class EmailAssociationCreate(BaseModel):
 
 class EmailAssociationUpdate(BaseModel):
     company_id: Optional[int] = None
-    department: Optional[Department] = None
+    departments: Optional[List[Department]] = None
     person_id: Optional[int] = None
-    association_type: Optional[AssociationType] = None
-    notes: Optional[str] = None
 
 class EmailAssociation(EmailAssociationBase):
     association_id: int

@@ -1,5 +1,5 @@
 # emails/models.py
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -42,13 +42,11 @@ class EmailAssociation(Base):
     
     # Association targets (all optional - at least one should be provided)
     company_id = Column("company_id", Integer, nullable=True, index=True)  # References companies table
-    department = Column("department", String(100), nullable=True)  # Department name/type
+    departments = Column("departments", JSON, nullable=True)  # List of department names
     person_id = Column("person_id", Integer, nullable=True, index=True)  # References persons table
     
     # Association metadata
-    association_type = Column("association_type", String(50), nullable=True)  # primary, secondary, support, etc.
     created_at = Column("created_at", DateTime, default=datetime.utcnow, nullable=False)
-    notes = Column("notes", Text, nullable=True)
     
     # Relationship back to email directory
     email = relationship("EmailDirectory", back_populates="associations")

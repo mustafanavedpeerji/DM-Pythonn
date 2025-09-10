@@ -88,7 +88,10 @@ def get_associations_by_person(db: Session, person_id: int) -> List[models.Email
 
 def get_associations_by_department(db: Session, department: str) -> List[models.EmailAssociation]:
     """Get all email associations for a specific department"""
-    return db.query(models.EmailAssociation).filter(models.EmailAssociation.department == department).all()
+    # Use JSON search since departments is now a JSON array
+    return db.query(models.EmailAssociation).filter(
+        models.EmailAssociation.departments.contains([department])
+    ).all()
 
 def create_association(db: Session, association: schemas.EmailAssociationCreate) -> models.EmailAssociation:
     """Create a new email association"""
@@ -140,6 +143,28 @@ def get_email_with_associations(db: Session, email_id: int) -> Optional[models.E
     """Get email with all its associations"""
     return db.query(models.EmailDirectory).filter(models.EmailDirectory.email_id == email_id).first()
 
+def consolidate_associations(associations_data: List[schemas.EmailAssociationCreate]) -> List[schemas.EmailAssociationCreate]:
+    """Consolidate associations - merge departments for same company/person"""
+    consolidated = {}
+    
+    for assoc in associations_data:
+        # Create a key based on company_id and person_id
+        key = (assoc.company_id, assoc.person_id)
+        
+        if key in consolidated:
+            # Merge departments
+            existing = consolidated[key]
+            existing_depts = existing.departments or []
+            new_depts = assoc.departments or []
+            
+            # Combine and deduplicate departments
+            combined_depts = list(set(existing_depts + new_depts))
+            existing.departments = combined_depts if combined_depts else None
+        else:
+            consolidated[key] = assoc
+    
+    return list(consolidated.values())
+
 def create_email_with_associations(db: Session, email_data: schemas.EmailDirectoryCreate, 
                                   associations_data: List[schemas.EmailAssociationCreate]) -> tuple:
     """Create email and its associations in a single transaction"""
@@ -151,9 +176,12 @@ def create_email_with_associations(db: Session, email_data: schemas.EmailDirecto
     db.add(db_email)
     db.flush()  # Flush to get the email_id without committing
     
+    # Consolidate associations to avoid multiple rows for same company with different departments
+    consolidated_associations = consolidate_associations(associations_data)
+    
     # Create associations
     db_associations = []
-    for association_data in associations_data:
+    for association_data in consolidated_associations:
         association_dict = association_data.model_dump()
         association_dict["email_id"] = db_email.email_id
         
@@ -192,7 +220,7 @@ def search_emails_with_associations(db: Session, search_term: str = None,
         conditions.append(models.EmailAssociation.person_id == person_id)
         
     if department:
-        conditions.append(models.EmailAssociation.department == department)
+        conditions.append(models.EmailAssociation.departments.contains([department]))
     
     if conditions:
         query = query.filter(and_(*conditions))
