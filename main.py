@@ -30,6 +30,10 @@ from audit_logs.routes import router as audit_log_router
 from emails import models as email_models
 from emails.routes import router as email_router
 
+# Import cell phone modules
+from cell_phones import models as cell_phone_models
+from cell_phones.routes import router as cell_phone_router
+
 # Create all tables (both industries and companies will use the same Base)
 Base.metadata.create_all(bind=engine)
 
@@ -67,6 +71,9 @@ app.include_router(audit_log_router)
 
 # Include email routes
 app.include_router(email_router, prefix="/emails", tags=["emails"])
+
+# Include cell phone routes
+app.include_router(cell_phone_router, prefix="/cell-phones", tags=["cell-phones"])
 
 @app.get("/health")
 def health_check():
