@@ -22,6 +22,8 @@ class EmailDirectory(Base):
     email_type = Column("email_type", String(50), nullable=True)  # business, personal, support, etc.
     description = Column("description", Text, nullable=True)
     is_active = Column("is_active", String(10), default="Active")  # Active, Inactive
+    gender = Column("gender", String(10), nullable=True)  # Male, Female, Unknown
+    city = Column("city", String(100), nullable=True)  # City in Pakistan
     
     # Relationship to email associations
     associations = relationship("EmailAssociation", back_populates="email", cascade="all, delete-orphan")

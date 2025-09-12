@@ -19,6 +19,11 @@ class EmailStatus(str, Enum):
     ACTIVE = "Active"
     INACTIVE = "Inactive"
 
+class Gender(str, Enum):
+    MALE = "Male"
+    FEMALE = "Female"
+    UNKNOWN = "Unknown"
+
 # Department enum (same as persons)
 class Department(str, Enum):
     BOARD_MEMBER = "Board Member"
@@ -57,6 +62,8 @@ class EmailDirectoryBase(BaseModel):
     email_type: Optional[EmailType] = None
     description: Optional[str] = None
     is_active: EmailStatus = EmailStatus.ACTIVE
+    gender: Optional[Gender] = None
+    city: Optional[str] = None
 
     @field_validator('email_address')
     @classmethod
@@ -76,6 +83,8 @@ class EmailDirectoryUpdate(BaseModel):
     email_type: Optional[EmailType] = None
     description: Optional[str] = None
     is_active: Optional[EmailStatus] = None
+    gender: Optional[Gender] = None
+    city: Optional[str] = None
 
     @field_validator('email_address')
     @classmethod
